@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build  -t salviashish/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run salviashish/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t salviashish/multi-client ./client
+  - docker build -t salviashish/multi-nginx ./nginx
+  - docker build -t salviashish/multi-server ./server
+  - docker build -t salviashish/multi-worker ./worker
+  # log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push salviashish/multi-client
+  - docker push salviashish/multi-nginx
+  - docker push salviashish/multi-server
+  - docker push salviashish/multi-worker
